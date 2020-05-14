@@ -1,9 +1,12 @@
 import os
 import shutil
+import tarfile
 import tempfile
 
+import valohai_yaml
 from fastapi import UploadFile
 from valohai_cli.utils.hashing import get_fp_sha256
+from valohai_yaml.objs import Config
 
 from minihai.conf import settings
 from minihai.models.base import BaseModel
@@ -15,6 +18,14 @@ class Commit(BaseModel):
     @property
     def tarball_path(self):
         return self.path / "tarball"
+
+    @property
+    def valohai_yaml_path(self):
+        return self.path / "valohai.yaml"
+
+    def load_config(self) -> Config:
+        with open(self.valohai_yaml_path, "r") as fp:
+            return valohai_yaml.parse(fp)
 
     @property
     def exists(self) -> bool:
@@ -42,4 +53,8 @@ class Commit(BaseModel):
             },
         )
         os.rename(tarball_temp_path, commit.tarball_path)
+        with tarfile.open(commit.tarball_path) as tf:
+            vio = tf.extractfile("valohai.yaml")
+            with open(commit.valohai_yaml_path, "wb") as outf:
+                shutil.copyfileobj(vio, outf)
         return commit

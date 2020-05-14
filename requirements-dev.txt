@@ -13,6 +13,7 @@ chardet==3.0.4            # via requests
 click==7.1.2              # via black, pip-tools, uvicorn, valohai-cli
 coverage==5.1             # via pytest-cov
 cryptography==2.9.2       # via pyopenssl, requests
+docker==4.2.0             # via -r requirements.in
 fastapi==0.54.1           # via -r requirements.in
 h11==0.9.0                # via uvicorn
 httptools==0.1.1          # via uvicorn
@@ -36,8 +37,8 @@ python-multipart==0.0.5   # via -r requirements.in
 pyyaml==5.3.1             # via valohai-yaml
 regex==2020.5.7           # via black
 requests-toolbelt==0.9.1  # via valohai-cli
-requests[security]==2.23.0  # via -r requirements-dev.in, requests-toolbelt, valohai-cli
-six==1.14.0               # via cryptography, jsonschema, packaging, pip-tools, pyopenssl, pyrsistent, python-multipart, valohai-cli
+requests[security]==2.23.0  # via -r requirements-dev.in, docker, requests-toolbelt, valohai-cli
+six==1.14.0               # via cryptography, docker, jsonschema, packaging, pip-tools, pyopenssl, pyrsistent, python-multipart, valohai-cli, websocket-client
 starlette==0.13.2         # via fastapi
 toml==0.10.0              # via black
 typed-ast==1.4.1          # via black
@@ -48,6 +49,7 @@ uvloop==0.14.0            # via uvicorn
 valohai-cli==0.12.1       # via -r requirements.in
 valohai-yaml==0.10.0      # via valohai-cli
 wcwidth==0.1.9            # via pytest
+websocket-client==0.57.0  # via docker
 websockets==8.1           # via uvicorn
 zipp==3.1.0               # via importlib-metadata
 

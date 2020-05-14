@@ -1,3 +1,4 @@
+import datetime
 from uuid import UUID
 
 from fastapi import Path, APIRouter
@@ -6,6 +7,7 @@ from minihai import consts as consts
 from minihai.app.utils import make_list_response
 from minihai.models.commit import Commit
 from minihai.models.execution import Execution, ExecutionCreationData
+from minihai.services.execution import start_execution
 
 router = APIRouter()
 
@@ -18,7 +20,8 @@ def read_executions():
             **execution.metadata,
             "duration": None,
             "events": None,
-            "urls": {"display": None,},
+            "urls": {"display": None},
+            "status": execution.status,
         }
         execution_datas.append(data)
     execution_datas.sort(key=lambda e: e["ctime"])
@@ -31,12 +34,16 @@ def read_executions():
 @router.get("/api/v0/executions/{execution_id}/events/")
 def get_execution_events(execution_id: UUID = Path(default=None),):
     execution = Execution.load(id=execution_id)
-    message = "haha blah"
-    events = [
-        {"stream": "status", "message": message, "time": "2017-04-04T11:38:28.444000"},
-        {"stream": "stderr", "message": message, "time": "2017-04-04T11:39:28.444000"},
-        {"stream": "stdout", "message": message, "time": "2017-04-04T11:41:28.444000"},
-    ]
+    execution.check_container_status()
+    events = execution.get_logs()
+    if not events:
+        events = [
+            {
+                "stream": "status",
+                "message": "No events available...",
+                "time": datetime.datetime.now().isoformat(),
+            },
+        ]
     return {
         "total": len(events),
         "limit": 2000,
@@ -55,4 +62,5 @@ def create_execution(body: ExecutionCreationData):
         raise NotImplementedError("Inputs not supported")
     Commit.load(id=body.commit)  # simply asserts the commit exists
     exec = Execution.create(data=body)
+    start_execution(exec)  # TODO: absolutely no queuing here :)
     return exec.metadata

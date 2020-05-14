@@ -31,6 +31,7 @@ class BaseModel:
         self.id = sanitize_id(id)
         self.path = self.get_base_path(id)
         self.metadata_path = self.path / "metadata.json"
+        self._cached_metadata = None
 
     @property
     def exists(self) -> bool:
@@ -38,8 +39,26 @@ class BaseModel:
 
     @property
     def metadata(self) -> dict:
-        with open(self.metadata_path) as fp:
-            return json.load(fp)
+        if self._cached_metadata is None:
+            with open(self.metadata_path) as fp:
+                self._cached_metadata = json.load(fp)
+        return self._cached_metadata.copy()
+
+    def write_metadata(self, new_metadata: dict):
+        # TODO: This isn't atomic, it should maybe be
+        with open(self.metadata_path, "w") as outf:
+            json.dump(
+                {"id": self.id, **new_metadata},
+                outf,
+                default=jsonable_encoder,
+                indent=2,
+                sort_keys=True,
+            )
+            self._cached_metadata = None
+
+    def update_metadata(self, updates: dict):
+        new_metadata = {**self.metadata, **updates}
+        return self.write_metadata(new_metadata)
 
     @classmethod
     def load(cls, id):
@@ -65,12 +84,7 @@ class BaseModel:
         obj = cls(id=id)
         assert not obj.exists
         obj.path.mkdir(parents=True)
-        with open(obj.metadata_path, "w") as outf:
-            json.dump(
-                {"id": id, "ctime": datetime.datetime.now().isoformat(), **data,},
-                outf,
-                default=jsonable_encoder,
-                indent=2,
-                sort_keys=True,
-            )
+        obj.write_metadata(
+            {"id": id, "ctime": datetime.datetime.now().isoformat(), **data}
+        )
         return obj
