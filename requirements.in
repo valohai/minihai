@@ -1,2 +1,5 @@
 fastapi
+python-multipart
+ulid2
 uvicorn
+valohai-cli
