@@ -1,0 +1,6 @@
+-r requirements.in
+black
+pip-tools
+pytest
+pytest-cov
+requests
