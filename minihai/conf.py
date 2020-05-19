@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from pathlib import Path
 
 import docker
@@ -14,3 +15,6 @@ class Settings(BaseSettings):
 settings = Settings()
 os.makedirs(settings.data_path, exist_ok=True)
 docker_client = docker.from_env()
+cache_db = sqlite3.connect(
+    settings.data_path / "cache.sqlite3", check_same_thread=False
+)

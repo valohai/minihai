@@ -1,15 +1,16 @@
 import json
 import logging
 import pathlib
-from typing import Optional
+from typing import Optional, Iterable
 from uuid import UUID
 
 import pydantic
 import ulid2
 from docker.models.containers import Container
 
-from minihai.conf import docker_client
+import minihai.conf as conf
 from minihai.models.base import BaseModel
+from minihai.models.output import Output
 from minihai.services.docker import get_container_logs
 
 log = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ class Execution(BaseModel):
     @property
     def outputs_path(self) -> pathlib.Path:
         path = self.path / "outputs"
-        path.mkdir(parents=True)
+        path.mkdir(parents=True, exist_ok=True)
         return path
 
     def get_log_path(self, name) -> pathlib.Path:
@@ -64,7 +65,7 @@ class Execution(BaseModel):
         container_id = self.metadata.get("container_id")
         if not container_id:
             return None
-        return docker_client.containers.get(container_id=container_id)
+        return conf.docker_client.containers.get(container_id=container_id)
 
     @classmethod
     def create(cls, data: ExecutionCreationData):
@@ -113,3 +114,11 @@ class Execution(BaseModel):
         if not container:
             return None
         return get_container_logs(container)
+
+    def iterate_outputs(self) -> Iterable[Output]:
+        for disk_path in self.outputs_path.rglob("*"):
+            yield Output(
+                name=disk_path.relative_to(self.outputs_path),
+                path=str(disk_path.relative_to(conf.settings.data_path)),
+                execution_id=self.id,
+            )
