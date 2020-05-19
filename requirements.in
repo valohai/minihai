@@ -1,3 +1,4 @@
+aiofiles
 docker>=4.1
 fastapi
 python-multipart
