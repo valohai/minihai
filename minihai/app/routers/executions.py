@@ -12,23 +12,33 @@ from minihai.services.execution import start_execution
 router = APIRouter()
 
 
+def convert_execution(execution: Execution) -> dict:
+    return {
+        **execution.metadata,
+        "duration": None,
+        "events": None,
+        "urls": {"display": None},
+        "status": execution.status,
+    }
+
+
 @router.get("/api/v0/executions/")
 def read_executions():
-    execution_datas = []
-    for execution in Execution.iterate_instances():
-        data = {
-            **execution.metadata,
-            "duration": None,
-            "events": None,
-            "urls": {"display": None},
-            "status": execution.status,
-        }
-        execution_datas.append(data)
+    execution_datas = [
+        convert_execution(execution) for execution in Execution.iterate_instances()
+    ]
     execution_datas.sort(key=lambda e: e["ctime"])
     for counter, execution_data in enumerate(execution_datas, 1):
         execution_data["counter"] = counter
     execution_datas.reverse()
     return make_list_response(execution_datas)
+
+
+@router.get("/api/v0/executions/{execution_id}/")
+def get_execution_detail(execution_id: UUID = Path(default=None),):
+    execution = Execution.load(id=execution_id)
+    execution.check_container_status()
+    return convert_execution(execution)
 
 
 @router.get("/api/v0/executions/{execution_id}/events/")
