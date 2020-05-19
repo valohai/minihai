@@ -57,7 +57,7 @@ class Execution(BaseModel):
             return "error"
 
         if self.metadata.get("container_id"):
-            return "running"
+            return "started"
         return "queued"
 
     @property
