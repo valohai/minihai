@@ -1,3 +1,5 @@
+import os
+
 import click
 import uvicorn
 
@@ -6,8 +8,14 @@ from minihai.art import BANNER
 
 
 @click.group()
-def main():
-    pass
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(dir_okay=False, exists=True),
+    envvar="MINIHAI_CONFIG",
+)
+def main(config):
+    os.environ["MINIHAI_CONFIG"] = config
 
 
 @main.command(help="Start the Minihai server.")
