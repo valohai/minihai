@@ -1,5 +1,8 @@
+*.egg-info
 *.py[cod]
 .*cache
 .coverage
-htmlcov
+/attic
+/build
 /data
+htmlcov

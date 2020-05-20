@@ -1,15 +1,26 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 import minihai
 from minihai import consts as consts
 from minihai.app.utils import make_list_response
+from minihai.art import BANNER
 
 router = APIRouter()
 
 
 @router.get("/")
 def read_root():
-    return {"version": minihai.__version__}
+    return Response(
+        f"{BANNER}\n\nVersion {minihai.__version__}", media_type="text/plain"
+    )
+
+
+@router.get("/api/v0/server/")
+def get_server_info():
+    return {
+        "flavor": "minihai",
+        "version": minihai.__version__,
+    }
 
 
 @router.post("/api/v0/get-token/")
