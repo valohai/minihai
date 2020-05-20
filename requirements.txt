@@ -20,6 +20,7 @@ importlib-metadata==1.6.0  # via jsonschema
 jsonschema==3.2.0         # via valohai-yaml
 pycparser==2.20           # via cffi
 pydantic==1.5.1           # via fastapi
+pyjwt==1.7.1              # via -r requirements.in
 pyopenssl==19.1.0         # via requests
 pyrsistent==0.16.0        # via jsonschema
 python-multipart==0.0.5   # via -r requirements.in

@@ -1,6 +1,7 @@
 aiofiles
 docker>=4.1
 fastapi
+PyJWT
 python-multipart
 ulid2
 uvicorn

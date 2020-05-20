@@ -1,5 +1,7 @@
+import json
 import logging
 import os
+import secrets
 import sqlite3
 import sys
 from pathlib import Path
@@ -18,6 +20,8 @@ class Settings(pydantic.BaseSettings):
     data_path: Path = BASE_PATH / "data"
     mounts: Dict[str, str] = {}
     read_only_mounts: Dict[str, str] = {}
+    jwt_secret: str = None
+    auth: Dict[str, str] = {}
 
     def _build_values(
         self, init_kwargs: Dict[str, Any], _env_file: Union[Path, str, None] = None
@@ -30,6 +34,16 @@ class Settings(pydantic.BaseSettings):
                 values = deep_update(values, yaml.safe_load(f))
         return values
 
+    def initialize(self):
+        os.makedirs(self.data_path, exist_ok=True)
+        jwt_secret_path = self.data_path / "jwt_secret.json"
+        if jwt_secret_path.exists() or not self.jwt_secret:
+            if not jwt_secret_path.exists():
+                jwt_secret_path.write_text(
+                    json.dumps({"secret": secrets.token_hex(64)})
+                )
+            self.jwt_secret = json.loads(jwt_secret_path.read_text())["secret"]
+
     class Config:
         env_prefix = "MINIHAI"
 
@@ -38,6 +52,7 @@ class Settings(pydantic.BaseSettings):
 
 try:
     settings = Settings()
+    settings.initialize()
 except pydantic.ValidationError as ve:
     print("=================================================", file=sys.stderr)
     print("Minihai: Failed to load settings!", file=sys.stderr)
@@ -45,7 +60,6 @@ except pydantic.ValidationError as ve:
     print("=================================================", file=sys.stderr)
     sys.exit(9)
 
-os.makedirs(settings.data_path, exist_ok=True)
 docker_client = docker.from_env()
 cache_db = sqlite3.connect(
     settings.data_path / "cache.sqlite3", check_same_thread=False
