@@ -16,6 +16,8 @@ log = logging.getLogger(__name__)
 
 class Settings(pydantic.BaseSettings):
     data_path: Path = BASE_PATH / "data"
+    mounts: Dict[str, str] = {}
+    read_only_mounts: Dict[str, str] = {}
 
     def _build_values(
         self, init_kwargs: Dict[str, Any], _env_file: Union[Path, str, None] = None

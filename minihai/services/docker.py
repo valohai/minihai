@@ -6,7 +6,7 @@ from typing import Dict, List, Optional
 from docker.models.containers import Container
 from docker.types import Mount
 
-from minihai.conf import docker_client
+import minihai.conf as conf
 
 log = logging.getLogger(__name__)
 
@@ -24,16 +24,10 @@ def boot_container(
     tarball_chown_stanza: Optional[str] = None,
     mounts: list,
 ):
-    # Ensure the tarball extraction root exists in the image by mounting it as a volume.
-    # We can't run a mkdir before the container runs and we also don't want to race against
-    # the injection of those files.
-    volume_name = container_name + "-root"
-    log.info(f"Creating volume {volume_name}...")
-    in_volume = docker_client.volumes.create(name=volume_name)
-    mounts.append(Mount(target=tarball_root, source=in_volume.name, type="volume",))
+    mounts = list(mounts) + get_container_mounts(container_name, tarball_root)
 
     log.info(f"Creating container {container_name}...")
-    container: Container = docker_client.containers.create(
+    container: Container = conf.docker_client.containers.create(
         command=command,
         environment=environment_variables,
         image=image,
@@ -63,6 +57,29 @@ def boot_container(
         container.exec_run(cmd, user="root")
     container.reload()
     return container
+
+
+def get_container_mounts(container_name: str, tarball_root: str):
+    mounts = []
+    # Ensure the tarball extraction root exists in the image by mounting it as a volume.
+    # We can't run a mkdir before the container runs and we also don't want to race against
+    # the injection of those files.
+    volume_name = container_name + "-root"
+    log.info(f"Creating volume {volume_name}...")
+    in_volume = conf.docker_client.volumes.create(name=volume_name)
+    mounts.append(Mount(target=tarball_root, source=in_volume.name, type="volume",))
+    # Then add in any configured RW/RO mounts.
+    for read_only, map in [
+        (False, conf.settings.mounts),
+        (True, conf.settings.read_only_mounts),
+    ]:
+        for source, destination in map.items():
+            mounts.append(
+                Mount(
+                    target=destination, source=source, read_only=read_only, type="bind",
+                )
+            )
+    return mounts
 
 
 def inject_tarballs(
