@@ -75,6 +75,13 @@ class BaseModel:
                     yield os.path.basename(dirpath)
 
     @classmethod
+    def count(cls) -> int:
+        n = 0
+        for id in cls.iterate_ids():
+            n += 1
+        return n
+
+    @classmethod
     def iterate_instances(cls) -> Iterable:
         for id in cls.iterate_ids():
             yield cls(id=id)

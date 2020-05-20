@@ -70,7 +70,12 @@ class Execution(BaseModel):
     @classmethod
     def create(cls, data: ExecutionCreationData):
         id = str(ulid2.generate_ulid_as_uuid())
-        execution = cls.create_with_metadata(id=id, data={**data.dict(),})
+        counter = (
+            cls.count() + 1
+        )  # Not necessarily safe in highly concurrent situations.
+        execution = cls.create_with_metadata(
+            id=id, data={"counter": counter, **data.dict(),}
+        )
         return execution
 
     def check_container_status(self: "Execution"):

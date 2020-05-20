@@ -27,10 +27,7 @@ def read_executions():
     execution_datas = [
         convert_execution(execution) for execution in Execution.iterate_instances()
     ]
-    execution_datas.sort(key=lambda e: e["ctime"])
-    for counter, execution_data in enumerate(execution_datas, 1):
-        execution_data["counter"] = counter
-    execution_datas.reverse()
+    execution_datas.sort(key=lambda e: e["ctime"], reverse=True)
     return make_list_response(execution_datas)
 
 
