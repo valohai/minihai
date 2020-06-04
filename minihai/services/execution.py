@@ -11,6 +11,14 @@ from minihai.services.docker import boot_container
 log = logging.getLogger(__name__)
 
 
+def write_config_files(execution: Execution) -> None:
+    config_path = execution.config_path
+    for name in ("parameters", "config", "inputs"):
+        # Just emulate the Valohai configuration files without content for the time being.
+        (config_path / f"{name}.yaml").write_text("{}")
+        (config_path / f"{name}.json").write_text("{}")
+
+
 def start_execution(execution: Execution) -> Container:
     metadata = execution.metadata
     if "container_id" in metadata:
@@ -28,6 +36,7 @@ def start_execution(execution: Execution) -> Container:
         step.build_command(parameter_values=execution_info.parameters)
     )
     command = f"sh -c {shlex.quote(command)}"
+    write_config_files(execution)
     container = boot_container(
         command=command,
         container_name=f"minihai-{execution.id}",
@@ -43,7 +52,19 @@ def start_execution(execution: Execution) -> Container:
                 source=str(execution.outputs_path.absolute()),
                 read_only=False,
                 type="bind",
-            )
+            ),
+            Mount(
+                target="/valohai/config",
+                source=str(execution.config_path.absolute()),
+                read_only=True,
+                type="bind",
+            ),
+            Mount(
+                target="/valohai/inputs",
+                source=str(execution.inputs_path.absolute()),
+                read_only=True,
+                type="bind",
+            ),
         ],
     )
     execution.update_metadata({"container_id": container.id})

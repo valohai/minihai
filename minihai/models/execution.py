@@ -16,6 +16,12 @@ from minihai.services.docker import get_container_logs
 log = logging.getLogger(__name__)
 
 
+def _existing_subpath(root: pathlib.Path, next: str) -> pathlib.Path:
+    path = root / next
+    path.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 class ExecutionCreationData(pydantic.BaseModel):
     commit: str
     project: UUID
@@ -34,9 +40,15 @@ class Execution(BaseModel):
 
     @property
     def outputs_path(self) -> pathlib.Path:
-        path = self.path / "outputs"
-        path.mkdir(parents=True, exist_ok=True)
-        return path
+        return _existing_subpath(self.path, "outputs")
+
+    @property
+    def config_path(self) -> pathlib.Path:
+        return _existing_subpath(self.path, "config")
+
+    @property
+    def inputs_path(self) -> pathlib.Path:
+        return _existing_subpath(self.path, "inputs")
 
     def get_log_path(self, name) -> pathlib.Path:
         return self.path / f"{name}.log"
@@ -74,7 +86,7 @@ class Execution(BaseModel):
             cls.count() + 1
         )  # Not necessarily safe in highly concurrent situations.
         execution = cls.create_with_metadata(
-            id=id, data={"counter": counter, **data.dict(),}
+            id=id, data={"counter": counter, **data.dict(), }
         )
         return execution
 
