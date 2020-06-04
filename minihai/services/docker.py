@@ -7,8 +7,13 @@ from docker.models.containers import Container
 from docker.types import Mount
 
 import minihai.conf as conf
+from minihai.lib.events import format_log_event
 
 log = logging.getLogger(__name__)
+
+
+class BootError(RuntimeError):
+    pass
 
 
 # Borrowed from VHNB :)
@@ -105,7 +110,9 @@ def get_container_logs(container: Container) -> List[dict]:
                 continue
             timestamp, content = line.split(" ", 1)
             events.append(
-                {"stream": stream, "message": content, "time": timestamp.strip("Z")}
+                format_log_event(
+                    stream=stream, message=content, time=timestamp.strip("Z")
+                )
             )
     events.sort(key=itemgetter("time"))
     return events

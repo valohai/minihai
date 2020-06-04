@@ -9,9 +9,14 @@ import ulid2
 from docker.models.containers import Container
 
 import minihai.conf as conf
+from minihai.lib.events import format_log_event
 from minihai.models.base import BaseModel
 from minihai.models.output import Output
 from minihai.services.docker import get_container_logs
+
+CONTAINER_EXIT_CODE_METADATA_KEY = "container_exit_code"
+CONTAINER_FINAL_STATE_METADATA_KEY = "container_final_state"
+ERROR_MESSAGE_METADATA_KEY = "error_message"
 
 log = logging.getLogger(__name__)
 
@@ -59,10 +64,13 @@ class Execution(BaseModel):
 
     @property
     def status(self) -> str:
-        final_state = self.metadata.get("container_final_state")
+        error_message = self.metadata.get(ERROR_MESSAGE_METADATA_KEY)
+        if error_message:
+            return "error"
+        final_state = self.metadata.get(CONTAINER_FINAL_STATE_METADATA_KEY)
         if final_state and final_state.get("Error"):
             return "error"
-        container_exit_code = self.metadata.get("container_exit_code")
+        container_exit_code = self.metadata.get(CONTAINER_EXIT_CODE_METADATA_KEY)
         if container_exit_code is not None:
             if container_exit_code == 0:
                 return "complete"
@@ -86,7 +94,7 @@ class Execution(BaseModel):
             cls.count() + 1
         )  # Not necessarily safe in highly concurrent situations.
         execution = cls.create_with_metadata(
-            id=id, data={"counter": counter, **data.dict(), }
+            id=id, data={"counter": counter, **data.dict(),}
         )
         return execution
 
@@ -124,6 +132,11 @@ class Execution(BaseModel):
                 log.info(f"{self.id}: Wrote JSON log to {all_json_log_path}")
 
     def get_logs(self) -> Optional[list]:
+        error_message = self.metadata.get(ERROR_MESSAGE_METADATA_KEY)
+        if error_message:
+            return [
+                format_log_event(stream="stderr", message=error_message),
+            ]
         if self.all_json_log_path.exists():
             with self.all_json_log_path.open("r") as fp:
                 return json.load(fp)

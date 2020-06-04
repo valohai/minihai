@@ -1,4 +1,4 @@
-import datetime
+import logging
 from uuid import UUID
 
 from fastapi import Path, APIRouter
@@ -6,10 +6,17 @@ from fastapi import Path, APIRouter
 from minihai import consts as consts
 from minihai.app.utils import make_list_response
 from minihai.models.commit import Commit
-from minihai.models.execution import Execution, ExecutionCreationData
+from minihai.models.execution import (
+    Execution,
+    ExecutionCreationData,
+    ERROR_MESSAGE_METADATA_KEY,
+)
+from minihai.lib.events import format_log_event
 from minihai.services.execution import start_execution
 
 router = APIRouter()
+
+log = logging.getLogger(__name__)
 
 
 def convert_execution(execution: Execution) -> dict:
@@ -45,11 +52,7 @@ def get_execution_events(execution_id: UUID = Path(default=None),):
     events = execution.get_logs()
     if not events:
         events = [
-            {
-                "stream": "status",
-                "message": "No events available...",
-                "time": datetime.datetime.now().isoformat(),
-            },
+            format_log_event(stream="status", message="No events available..."),
         ]
     return {
         "total": len(events),
@@ -68,6 +71,13 @@ def create_execution(body: ExecutionCreationData):
     if body.inputs:
         raise NotImplementedError("Inputs not supported")
     Commit.load(id=body.commit)  # simply asserts the commit exists
-    exec = Execution.create(data=body)
-    start_execution(exec)  # TODO: absolutely no queuing here :)
-    return exec.metadata
+    execution = Execution.create(data=body)
+    try:
+        start_execution(execution)  # TODO: absolutely no queuing here :)
+    except Exception as exc:
+        log.error(f"Could not start execution {execution.id}", exc_info=True)
+        execution.update_metadata(
+            {ERROR_MESSAGE_METADATA_KEY: str(exc),}
+        )
+
+    return execution.metadata
