@@ -59,9 +59,7 @@ def create_access_token(data: dict):
 
 def create_user_access_token(username: str):
     password = conf.settings.auth[username]
-    return create_access_token({
-        "sub": username, "pha": generate_pha(password),
-    })
+    return create_access_token({"sub": username, "pha": generate_pha(password),})
 
 
 def generate_pha(password):

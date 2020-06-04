@@ -3,6 +3,7 @@ import shlex
 from operator import itemgetter
 from typing import Dict, List, Optional
 
+from docker.errors import ImageNotFound, APIError
 from docker.models.containers import Container
 from docker.types import Mount
 
@@ -30,6 +31,16 @@ def boot_container(
     mounts: list,
 ):
     mounts = list(mounts) + get_container_mounts(container_name, tarball_root)
+
+    try:
+        docker_image = conf.docker_client.images.get(image)
+    except ImageNotFound:
+        log.info(f"Image {image} not found locally, pulling it.")
+        try:
+            docker_image = conf.docker_client.images.pull(image)
+        except APIError as ae:
+            raise BootError(f"Could not pull image {image}.\n{ae}") from ae
+    log.info(f"Image {image}: {docker_image.id}")
 
     log.info(f"Creating container {container_name}...")
     container: Container = conf.docker_client.containers.create(

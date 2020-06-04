@@ -41,7 +41,7 @@ def start_execution(execution: Execution) -> Container:
         command=command,
         container_name=f"minihai-{execution.id}",
         environment_variables=environment_variables,
-        image=(execution_info.image),
+        image=qualify_image_name(execution_info),
         labels={},
         tarball_filenames=[commit.tarball_path],
         tarball_root="/valohai/repository/",
@@ -69,3 +69,11 @@ def start_execution(execution: Execution) -> Container:
     )
     execution.update_metadata({"container_id": container.id})
     return container
+
+
+def qualify_image_name(execution_info):
+    image = execution_info.image
+    # TODO: should this be more robust?
+    if ":" not in image:
+        image = f"{image}:latest"
+    return image
