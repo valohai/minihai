@@ -5,6 +5,8 @@ from typing import Any, Dict
 
 from fastapi.encoders import jsonable_encoder
 
+# SQLite has Upsert since version 3.24.0
+has_upsert = (sqlite3.sqlite_version_info >= (3, 24))
 
 class Cache:
     def __init__(self, db: sqlite3.Connection, name: str):
@@ -21,13 +23,22 @@ class Cache:
         return json.loads(value)
 
     def set_many(self, key_to_value: Dict[str, Any]):
-        query = (
-            f"INSERT INTO {self.name} "
-            f"(key, value, ts) "
-            f"VALUES (?, ?, ?) "
-            f"ON CONFLICT (key) "
-            f"DO UPDATE SET value=excluded.value, ts=excluded.ts"
-        )
+        if has_upsert:
+            query = (
+                f"INSERT INTO {self.name} "
+                f"(key, value, ts) "
+                f"VALUES (?, ?, ?) "
+                f"ON CONFLICT (key) "
+                f"DO UPDATE SET value=excluded.value, ts=excluded.ts"
+            )
+        else:
+            # If we don't have UPSERT support, fall back to INSERT OR REPLACE
+            query = (
+                f"INSERT OR REPLACE INTO {self.name} "
+                f"(key, value, ts) "
+                f"VALUES (?, ?, ?)"
+            )
+
         return self.db.executemany(
             query,
             [

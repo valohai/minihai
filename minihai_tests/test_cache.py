@@ -13,3 +13,6 @@ def test_cache(tmpdir):
     c1.set_many({"yay": 123, "foop": 456})
     assert c1.get("yay") == 123
     assert c1.get("foop") == 456
+    c1.set_many({"yay": "hernekeitto", "foop": "teline"})
+    assert c1.get("yay") == "hernekeitto"
+    assert c1.get("foop") == "teline"
