@@ -15,7 +15,8 @@ from minihai.art import BANNER
     envvar="MINIHAI_CONFIG",
 )
 def main(config):
-    os.environ["MINIHAI_CONFIG"] = config
+    if config:
+        os.environ["MINIHAI_CONFIG"] = config
 
 
 @main.command(help="Start the Minihai server.")
