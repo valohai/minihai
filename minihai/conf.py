@@ -62,5 +62,5 @@ except pydantic.ValidationError as ve:
 
 docker_client = docker.from_env()
 cache_db = sqlite3.connect(
-    settings.data_path / "cache.sqlite3", check_same_thread=False
+    str(settings.data_path / "cache.sqlite3"), check_same_thread=False
 )
