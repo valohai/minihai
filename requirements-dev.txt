@@ -19,7 +19,6 @@ fastapi==0.54.1           # via -r requirements.in
 h11==0.9.0                # via uvicorn
 httptools==0.1.1          # via uvicorn
 idna==2.9                 # via requests
-importlib-metadata==1.6.0  # via jsonschema, pluggy, pytest
 jsonschema==3.2.0         # via valohai-yaml
 more-itertools==8.2.0     # via pytest
 packaging==20.3           # via pytest
@@ -46,14 +45,13 @@ toml==0.10.0              # via black
 typed-ast==1.4.1          # via black
 ulid2==0.2.0              # via -r requirements.in
 urllib3==1.25.9           # via requests
-uvicorn==0.11.5           # via -r requirements.in
+uvicorn==0.11.7           # via -r requirements.in
 uvloop==0.14.0            # via uvicorn
 valohai-cli==0.12.1       # via -r requirements.in
 valohai-yaml==0.10.0      # via valohai-cli
 wcwidth==0.1.9            # via pytest
 websocket-client==0.57.0  # via docker
 websockets==8.1           # via uvicorn
-zipp==3.1.0               # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip
