@@ -77,7 +77,7 @@ pytest==5.4.2
     #   pytest-cov
 python-multipart==0.0.5
     # via -r requirements.in
-pyyaml==5.3.1
+pyyaml==5.4
     # via valohai-yaml
 regex==2020.5.7
     # via black
