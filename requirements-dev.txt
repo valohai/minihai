@@ -29,7 +29,7 @@ click==7.1.2
     #   valohai-cli
 coverage==5.1
     # via pytest-cov
-cryptography==2.9.2
+cryptography==3.3.2
     # via
     #   pyopenssl
     #   requests
