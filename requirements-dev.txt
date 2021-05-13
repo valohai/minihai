@@ -59,7 +59,7 @@ py==1.10.0
     # via pytest
 pycparser==2.20
     # via cffi
-pydantic==1.5.1
+pydantic==1.6.2
     # via fastapi
 pyjwt==1.7.1
     # via -r requirements.in
