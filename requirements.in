@@ -1,7 +1,7 @@
-aiofiles
-docker>=4.1
-fastapi
 PyJWT
+aiofiles~=0.8.0
+docker~=4.2.0
+fastapi~=0.54.0
 python-multipart
 ulid2
 uvicorn
