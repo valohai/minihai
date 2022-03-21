@@ -5,15 +5,23 @@ import secrets
 import sqlite3
 import sys
 from pathlib import Path
-from typing import Dict, Any, Union
+from typing import Dict
 
 import docker
 import pydantic
 import yaml
-from pydantic.utils import deep_update
 
 BASE_PATH = Path(__file__).parent.parent
 log = logging.getLogger(__name__)
+
+
+def settings_yaml_source(settings: pydantic.BaseSettings):
+    config_file = os.environ.get("MINIHAI_CONFIG")
+    if config_file:
+        log.info(f"Loading Minihai configuration from {config_file}")
+        with open(config_file) as f:
+            return yaml.safe_load(f)
+    return {}
 
 
 class Settings(pydantic.BaseSettings):
@@ -22,17 +30,6 @@ class Settings(pydantic.BaseSettings):
     read_only_mounts: Dict[str, str] = {}
     jwt_secret: str = None
     auth: Dict[str, str] = {}
-
-    def _build_values(
-        self, init_kwargs: Dict[str, Any], _env_file: Union[Path, str, None] = None
-    ) -> Dict[str, Any]:
-        values = super()._build_values(init_kwargs, _env_file)
-        config_file = os.environ.get("MINIHAI_CONFIG")
-        if config_file:
-            log.info(f"Loading Minihai configuration from {config_file}")
-            with open(config_file) as f:
-                values = deep_update(values, yaml.safe_load(f))
-        return values
 
     def initialize(self):
         os.makedirs(self.data_path, exist_ok=True)
@@ -46,6 +43,20 @@ class Settings(pydantic.BaseSettings):
 
     class Config:
         env_prefix = "MINIHAI"
+
+        @classmethod
+        def customise_sources(
+            cls,
+            init_settings,
+            env_settings,
+            file_secret_settings,
+        ):
+            return (
+                init_settings,
+                env_settings,
+                settings_yaml_source,
+                file_secret_settings,
+            )
 
 
 # TODO: this initialization should probably happen a little more deferredly...
