@@ -32,7 +32,7 @@ jsonschema==4.4.0
     # via valohai-yaml
 pydantic==1.9.0
     # via fastapi
-pyjwt==2.3.0
+pyjwt==2.4.0
     # via -r requirements.in
 pyrsistent==0.18.1
     # via jsonschema
